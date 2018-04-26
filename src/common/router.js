@@ -184,6 +184,9 @@ export const getRouterData = app => {
     '/ab/create': {
       component: dynamicWrapper(app, [], () => import('../routes/ab/TestForm')),
     },
+    '/ab/edit/:id': {
+      component: dynamicWrapper(app, [], () => import('../routes/ab/TestForm')),
+    },
     '/log/create': {
       component: dynamicWrapper(app, [], () => import('../routes/log/LogForm')),
     },

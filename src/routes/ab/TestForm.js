@@ -8,15 +8,17 @@ import {
   Button,
   Card,
   InputNumber,
-  Radio,
   Icon,
-  Tooltip,
 } from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import FooterToolbar from '../../components/FooterToolbar';
 import Param from './Param'
 import styles from './style.less';
 import { platforms, versions } from '../../utils/const';
+import { createAB, editAB, queryAB } from '../../services/ab';
+import { routerRedux } from 'dva/router';
+import moment from 'moment'
+import { queryLog } from '../../services/log';
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -28,20 +30,53 @@ const { TextArea } = Input;
 }))
 @Form.create()
 export default class BasicForms extends PureComponent {
+  state = {
+    detail: {},
+  }
+
   handleSubmit = e => {
     e.preventDefault();
-    this.props.form.validateFieldsAndScroll((err, values) => {
+    this.props.form.validateFieldsAndScroll( async (err, values) => {
       if (!err) {
-        this.props.dispatch({
-          type: 'form/submitRegularForm',
-          payload: values,
-        });
+        const {id} = this.props.match.params
+
+        const params = this.l.getData()
+
+        const postBody = {
+          ...values,
+          startTime: values.date[0].format('YYYY-MM-DD HH:mm:ss'),
+          endTime: values.date[1].format('YYYY-MM-DD HH:mm:ss'),
+          params,
+        }
+
+        if (id === undefined) {
+          // submit the values
+          const resp = await createAB(postBody)
+        } else {
+          const resp = await editAB({...postBody, id})
+        }
+
+        this.props.dispatch(routerRedux.push("/ab/list"))
       }
     });
   };
+
+  async componentDidMount() {
+    const {id} = this.props.match.params
+
+    if (id !== undefined) {
+      const res = await queryAB(id)
+      this.setState({detail: res.data.detail})
+    } else {
+      this.setState({detail: {}})
+    }
+
+  }
+
   render() {
     const { submitting } = this.props;
     const { getFieldDecorator, getFieldValue } = this.props.form;
+    const {detail} = this.state
 
     const formItemLayout = {
       labelCol: {
@@ -71,11 +106,13 @@ export default class BasicForms extends PureComponent {
                     message: '请输入标题',
                   },
                 ],
+                initialValue: detail.name,
               })(<Input placeholder="给这次测试起个名字" />)}
             </FormItem>
             <Form.Item {...formItemLayout} label={'平台'}>
-              {getFieldDecorator('platform', {
+              {getFieldDecorator('platformId', {
                 rules: [{ required: true, message: '请选择' }],
+                initialValue: detail.platformId,
               })(
                 <Select placeholder="请选择平台">
                   {platforms.map(t => (
@@ -87,8 +124,9 @@ export default class BasicForms extends PureComponent {
               )}
             </Form.Item>
             <Form.Item {...formItemLayout} label={'版本'}>
-              {getFieldDecorator('version', {
+              {getFieldDecorator('versionId', {
                 rules: [{ required: true, message: '请选择' }],
+                initialValue: detail.versionId,
               })(
                 <Select placeholder="请选择版本">
                   {versions.map(t => (
@@ -107,6 +145,12 @@ export default class BasicForms extends PureComponent {
                     message: '请选择起止日期',
                   },
                 ],
+                initialValue: (() => {
+                  if (detail.startTime) {
+                    return [moment(detail.startTime), moment(detail.endTime)]
+                  }
+                  return undefined
+                })(),
               })(<RangePicker style={{ width: '100%' }} placeholder={['开始日期', '结束日期']} />)}
             </FormItem>
             <FormItem
@@ -117,7 +161,9 @@ export default class BasicForms extends PureComponent {
                 </span>
               }
             >
-              {getFieldDecorator('weight')(<InputNumber placeholder="请输入" min={0} max={10} />)}
+              {getFieldDecorator('percentage', {
+                initialValue: detail.percentage,
+              })(<InputNumber placeholder="请输入" min={0} max={10} />)}
               <span> %</span><em className={styles.optional}>（最大10%）</em>
             </FormItem>
             <FormItem {...formItemLayout} label="测试信息描述">
@@ -128,6 +174,7 @@ export default class BasicForms extends PureComponent {
                     message: '请输入描述',
                   },
                 ],
+                initialValue: detail.description,
               })(
                 <TextArea
                   style={{ minHeight: 32 }}
@@ -139,18 +186,16 @@ export default class BasicForms extends PureComponent {
           </Form>
         </Card>
         <Card bordered={false} title="对照参数信息" style={{marginTop: 20}}>
-          <div>
-            <Param />
-            <div className={styles.addOne}>
-              <p><Icon type="plus-circle-o" /> 添加一个</p>
-            </div>
-          </div>
+          {getFieldDecorator('params', {
+            initialValue: detail.params,
+          })(
+            <Param ref={t => this.l = t} />
+          )}
         </Card>
         <FooterToolbar>
-          <Button type="primary" htmlType="submit" loading={submitting}>
+          <Button type="primary" onClick={this.handleSubmit} loading={submitting}>
             提交
           </Button>
-          <Button style={{ marginLeft: 8 }}>保存</Button>
         </FooterToolbar>
       </PageHeaderLayout>
     );

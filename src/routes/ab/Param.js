@@ -14,13 +14,10 @@ import {
 } from 'antd';
 import styles from './style.less';
 import Ace from '../../components/CodeEditor';
+import Item from './Item'
 
 const FormItem = Form.Item;
 
-@connect(({ loading }) => ({
-  submitting: loading.effects['form/submitRegularForm'],
-}))
-@Form.create()
 export default class BasicForms extends PureComponent {
   handleSubmit = e => {
     e.preventDefault();
@@ -33,67 +30,56 @@ export default class BasicForms extends PureComponent {
       }
     });
   };
-  render() {
-    const { submitting } = this.props;
-    const { getFieldDecorator, getFieldValue } = this.props.form;
 
-    const formItemLayout = {
-      labelCol: {
-        xs: { span: 24 },
-        sm: { span: 7 },
-        md: { span: 2 },
-        lg: { span: 5 },
-        xl: { span: 5 },
-      },
-      wrapperCol: {
-        xs: { span: 24 },
-        sm: { span: 12 },
-        md: { span: 10 },
-      },
+  handleAdd = () => {
+    this.setState({
+      data: [...this.state.data, {}],
+    })
+  }
+
+  handleRemove = index => {
+    const data = this.state.data.concat()
+    data.splice(index, 1)
+    this.setState({data})
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.list = [];
+    this.state = {
+      data: props.value || [],
     };
+  }
+  componentWillReceiveProps(nextProps) {
+    if ('value' in nextProps) {
+      this.setState({
+        data: nextProps.value || [],
+      });
+    }
+  }
+
+  getData = () => {
+    return this.list.map(item => {
+      return item.getFieldsValue()
+    })
+  }
+
+  render() {
+    const Tables = this.state.data.map((param, index) => {
+
+      return (
+        <Item key={index} value={param} ref={t => this.list[index] = t} />
+      )
+    })
 
     return (
-      <Card style={{width: '45%', display: 'inline-block', margin: 20}} title="编辑参数" extra={<Button type="danger" ghost size="small">删除</Button>}>
-        <Form onSubmit={this.handleSubmit} hideRequiredMark style={{ marginTop: 8 }}>
-          <FormItem {...formItemLayout} label="对照组名称">
-            {getFieldDecorator('title', {
-              rules: [
-                {
-                  required: true,
-                  message: '请输入',
-                },
-              ],
-            })(<Input placeholder="输入名称" />)}
-          </FormItem>
-          <FormItem {...formItemLayout} label="对照组描述">
-            {getFieldDecorator('description', {
-              rules: [
-                {
-                  required: true,
-                  message: '请输入',
-                },
-              ],
-            })(<Input placeholder="输入描述" />)}
-          </FormItem>
-          <FormItem {...formItemLayout} label="feature">
-            {getFieldDecorator('feature', {
-              rules: [
-                {
-                  required: true,
-                  message: '请输入',
-                },
-              ],
-            })(<Input placeholder="输入feature" />)}
-          </FormItem>
-          <FormItem label="详细配置情况">
-            <div>
-              {getFieldDecorator('public', {
-                initialValue: '1',
-              })(<Ace />)}
-            </div>
-          </FormItem>
-        </Form>
-      </Card>
-    );
+      <div>
+        {Tables}
+        <div className={styles.addOne} onClick={this.handleAdd}>
+          <p><Icon type="plus-circle-o" /> 添加一个</p>
+        </div>
+      </div>
+    )
   }
 }

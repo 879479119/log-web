@@ -13,15 +13,17 @@ import {
   Popover,
 } from 'antd';
 import { connect } from 'dva';
+import {routerRedux} from 'dva/router'
 import FooterToolbar from 'components/FooterToolbar';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import TableForm from '../Forms/TableForm';
 import styles from './style.less';
+import {createLog} from '../../services/log'
+import {queryLog, editLog} from '../../services/log'
 
-import {platforms, types, versions} from '../../utils/const'
+// import {platforms, types, versions} from '../../utils/const'
 
 const { Option } = Select;
-const { RangePicker } = DatePicker;
 
 const fieldLabels = {
   name: '埋点名',
@@ -34,23 +36,28 @@ const fieldLabels = {
 
 const tableData = [
   {
-    key: 'detail.view',
-    name: '用户访问量',
-    description: '你不是真生的快乐,is that right',
-  },
-  {
-    key: 'detail.view.url',
-    name: '用户访问页面',
-    description: '我爱你，不是因为你的美而已',
+    expression: 'detail.view.url',
+    name: '用户访问路由',
+    description: '用户访问的路由啊啊啊',
   },
 ];
 
 class AdvancedForm extends PureComponent {
   state = {
     width: '100%',
+    detail: {},
   };
-  componentDidMount() {
+  async componentDidMount() {
     window.addEventListener('resize', this.resizeFooterToolbar);
+    const {id} = this.props.match.params
+
+    if (id !== undefined) {
+      const res = await queryLog(id)
+      this.setState({detail: res.data.detail})
+    } else {
+      this.setState({detail: {columns: tableData}})
+    }
+
   }
   componentWillUnmount() {
     window.removeEventListener('resize', this.resizeFooterToolbar);
@@ -62,21 +69,34 @@ class AdvancedForm extends PureComponent {
       this.setState({ width });
     }
   };
-  render() {
-    const { form, dispatch, submitting } = this.props;
-    const { getFieldDecorator, validateFieldsAndScroll, getFieldsError, getFieldValue } = form;
-    const validate = () => {
-      validateFieldsAndScroll((error, values) => {
-        if (!error) {
+  handleSubmit = () => {
+
+    const { form } = this.props;
+    const { validateFieldsAndScroll} = form;
+
+
+    validateFieldsAndScroll(async (error, values) => {
+      if (!error) {
+
+
+        const {id} = this.props.match.params
+
+        if (id === undefined) {
           // submit the values
-          dispatch({
-            type: 'form/submitAdvancedForm',
-            payload: values,
-          });
+          const resp = await createLog(values)
+        } else {
+          const resp = await editLog({...values, id})
         }
-      });
-    };
+
+        this.props.dispatch(routerRedux.push("/log/list"))
+      }
+    });
+  }
+  render() {
+    const { form, submitting, common } = this.props;
+    const { getFieldDecorator, getFieldsError, getFieldValue } = form;
     const errors = getFieldsError();
+    const {detail} = this.state
     const getErrorInfo = () => {
       const errorCount = Object.keys(errors).filter(key => errors[key]).length;
       if (!errors || errorCount === 0) {
@@ -115,6 +135,9 @@ class AdvancedForm extends PureComponent {
         </span>
       );
     };
+
+    const types = common.logTypes || []
+
     return (
       <PageHeaderLayout
         title="埋点信息编辑"
@@ -128,32 +151,35 @@ class AdvancedForm extends PureComponent {
                 <Form.Item label={fieldLabels.name}>
                   {getFieldDecorator('name', {
                     rules: [{ required: true, message: '请输入' }],
+                    initialValue: detail.name,
                   })(<Input placeholder="请输入" />)}
-                </Form.Item>
-              </Col>
-              <Col xl={{ span: 6, offset: 2 }} lg={{ span: 8 }} md={{ span: 12 }} sm={24}>
-                <Form.Item label={fieldLabels.version}>
-                  {getFieldDecorator('version', {
-                    rules: [{ required: true, message: '请选择' }],
-                  })(
-                    <Select placeholder="请选择版本">
-                      {
-                        versions.map(t => <Option key={t.code} value={t.code} >{t.name}</Option>)
-                      }
-                    </Select>)}
                 </Form.Item>
               </Col>
               <Col xl={{ span: 8, offset: 2 }} lg={{ span: 10 }} md={{ span: 24 }} sm={24}>
                 <Form.Item label={fieldLabels.platform}>
-                  {getFieldDecorator('platform', {
+                  {getFieldDecorator('platformId', {
                     rules: [{ required: true, message: '请选择' }],
+                    initialValue: detail.platformId,
                   })(
                     <Select placeholder="请选择平台">
                       {
-                        platforms.map(t => <Option key={t.code} value={t.code} >{t.name}</Option>)
+                        (common.appPlatforms || []).map(t => <Option key={t.id} value={t.id} >{t.name}</Option>)
                       }
                     </Select>
                   )}
+                </Form.Item>
+              </Col>
+              <Col xl={{ span: 6, offset: 2 }} lg={{ span: 8 }} md={{ span: 12 }} sm={24} style={{display: getFieldValue('platformId') !== undefined ? 'block' : 'none'}}>
+                <Form.Item label={fieldLabels.version}>
+                  {getFieldDecorator('versionId', {
+                    rules: [{ required: true, message: '请选择' }],
+                    initialValue: detail.versionId,
+                  })(
+                    <Select placeholder="请选择版本">
+                      {
+                        (common.appVersions || []).filter(t => t.platformId === +getFieldValue('platformId')).map(t => <Option key={t.id} value={t.id} >{t.name}</Option>)
+                      }
+                    </Select>)}
                 </Form.Item>
               </Col>
             </Row>
@@ -162,6 +188,7 @@ class AdvancedForm extends PureComponent {
                 <Form.Item label={fieldLabels.type}>
                   {getFieldDecorator('type', {
                     rules: [{ required: true, message: '请输入' }],
+                    initialValue: detail.type,
                   })(
                     <Select placeholder="请选择类型">
                       {
@@ -175,10 +202,11 @@ class AdvancedForm extends PureComponent {
                 <Form.Item label={fieldLabels.subType}>
                   {getFieldDecorator('subType', {
                     rules: [{ required: true, message: '请选择类型' }],
+                    initialValue: detail.subType,
                   })(
                     <Select placeholder="请选择二级类型">
                       {
-                        (types.find(t => t.id === +getFieldValue('type')) || {subTypes: []}).subTypes.map(t => <Option key={t.id} value={t.id} >{t.name}</Option>)
+                        (types.find(t => t.id === +getFieldValue('type')) || {logSubTypeList: []}).logSubTypeList.map(t => <Option key={t.id} value={t.id} >{t.name}</Option>)
                       }
                     </Select>
                   )}
@@ -190,6 +218,7 @@ class AdvancedForm extends PureComponent {
                 <Form.Item label={fieldLabels.description}>
                   {getFieldDecorator('description', {
                     rules: [{ required: true, message: '写完' }],
+                    initialValue: detail.description,
                   })(<Input.TextArea autosize={{minRows: 4}} />)}
                 </Form.Item>
               </Col>
@@ -198,12 +227,12 @@ class AdvancedForm extends PureComponent {
         </Card>
         <Card title="埋点字段收集管理" bordered={false}>
           {getFieldDecorator('columns', {
-            initialValue: tableData,
+            initialValue: detail.columns,
           })(<TableForm />)}
         </Card>
         <FooterToolbar style={{ width: this.state.width }}>
           {getErrorInfo()}
-          <Button type="primary" onClick={validate} loading={submitting}>
+          <Button type="primary" onClick={this.handleSubmit} loading={submitting}>
             提交
           </Button>
         </FooterToolbar>
@@ -212,7 +241,8 @@ class AdvancedForm extends PureComponent {
   }
 }
 
-export default connect(({ global, loading }) => ({
+export default connect(({ global, loading, common }) => ({
   collapsed: global.collapsed,
   submitting: loading.effects['form/submitAdvancedForm'],
+  common,
 }))(Form.create()(AdvancedForm));

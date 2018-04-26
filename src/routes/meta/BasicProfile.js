@@ -9,45 +9,14 @@ import { types, platforms } from '../../utils/const';
 
 const { Description } = DescriptionList;
 
-@connect(({ profile, loading }) => ({
+@connect(({ profile, loading, common }) => ({
   profile,
   loading: loading.effects['profile/fetchBasic'],
+  common,
 }))
 export default class BasicProfile extends Component {
-  componentDidMount() {
-    const { dispatch } = this.props;
-    dispatch({
-      type: 'profile/fetchBasic',
-    });
-  }
-
   render() {
-    const { profile, loading } = this.props;
-    const { basicGoods, basicProgress } = profile;
-    let goodsData = [];
-    if (basicGoods.length) {
-      let num = 0;
-      let amount = 0;
-      basicGoods.forEach(item => {
-        num += Number(item.num);
-        amount += Number(item.amount);
-      });
-      goodsData = basicGoods.concat({
-        id: '总计',
-        num,
-        amount,
-      });
-    }
-    const renderContent = (value, row, index) => {
-      const obj = {
-        children: value,
-        props: {},
-      };
-      if (index === basicGoods.length) {
-        obj.props.colSpan = 0;
-      }
-      return obj;
-    };
+    const { loading, common } = this.props;
     const columns = [
       {
         title: 'ID',
@@ -61,7 +30,7 @@ export default class BasicProfile extends Component {
         title: '子类型',
         dataIndex: 'subTypes',
         render: (text, row) => {
-          return <span style={{ fontWeight: 600 }}>{row.subTypes.map(t => t.name).join(',')}</span>;
+          return <span style={{ fontWeight: 600 }}>{row.logSubTypeList.map(t => t.name).join(',')}</span>;
         },
       },
     ];
@@ -82,7 +51,7 @@ export default class BasicProfile extends Component {
             style={{ marginBottom: 24 }}
             pagination={false}
             loading={loading}
-            dataSource={types}
+            dataSource={common.logTypes}
             columns={columns}
             rowKey="id"
           />

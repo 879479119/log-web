@@ -5,17 +5,13 @@ import { routerRedux } from 'dva/router';
 import {
   List,
   Card,
-  Row,
-  Col,
   Radio,
   Input,
-  Progress,
   Button,
   Badge,
   Icon,
   Dropdown,
   Menu,
-  Avatar,
 } from 'antd';
 
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
@@ -40,7 +36,7 @@ export default class BasicList extends PureComponent {
     const res = await queryABList();
     if (res) {
       this.setState({
-        list: res,
+        list: res.data.list,
       });
     }
   }
@@ -50,7 +46,7 @@ export default class BasicList extends PureComponent {
   };
 
   handleEdit = id => {
-    this.props.dispatch(routerRedux.push(`/log/edit/${id}`));
+    this.props.dispatch(routerRedux.push(`/ab/edit/${id}`));
   };
 
   render() {
@@ -68,7 +64,7 @@ export default class BasicList extends PureComponent {
       </div>
     );
 
-    const ListContent = ({ data: { creator, createAt, startTime, endTime, status } }) => (
+    const ListContent = ({ data: { creator, createTime, startTime, endTime, status } }) => (
       <div className={styles.listContent}>
         <div>
           <div className={styles.listContentItem}>
@@ -87,7 +83,7 @@ export default class BasicList extends PureComponent {
           </div>
           <div className={styles.listContentItem}>
             <span>创建时间</span>
-            <p>{moment(createAt).format('YYYY-MM-DD HH:mm')}</p>
+            <p>{moment(createTime).format('YYYY-MM-DD HH:mm')}</p>
           </div>
         </div>
         <div style={{ marginTop: 20 }}>
@@ -146,7 +142,7 @@ export default class BasicList extends PureComponent {
               rowKey="id"
               dataSource={list}
               renderItem={item => (
-                <List.Item actions={[<a>编辑</a>, <MoreBtn />]}>
+                <List.Item actions={[<a onClick={() => this.handleEdit(item.id)}>编辑</a>, <MoreBtn />]}>
                   <List.Item.Meta
                     title={
                       <div>

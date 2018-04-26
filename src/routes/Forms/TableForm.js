@@ -77,7 +77,7 @@ export default class TableForm extends PureComponent {
         return;
       }
       const target = this.getRowByKey(key) || {};
-      if (!target.workId || !target.name || !target.department) {
+      if (!target.expression || !target.name || !target.description) {
         message.error('请填写完整成员信息。');
         e.target.focus();
         this.setState({
@@ -110,8 +110,8 @@ export default class TableForm extends PureComponent {
     const columns = [
       {
         title: '字段提取方式',
-        dataIndex: 'key',
-        key: 'key',
+        dataIndex: 'expression',
+        key: 'expression',
         width: '20%',
         render: (text, record) => {
           if (record.editable) {
@@ -119,7 +119,7 @@ export default class TableForm extends PureComponent {
               <Input
                 value={text}
                 autoFocus
-                onChange={e => this.handleFieldChange(e, 'key', record.key)}
+                onChange={e => this.handleFieldChange(e, 'expression', record.key)}
                 onKeyPress={e => this.handleKeyPress(e, record.key)}
                 placeholder="收集方式"
               />

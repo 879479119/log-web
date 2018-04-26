@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import moment from 'moment';
 import { connect } from 'dva';
-import {routerRedux} from 'dva/router'
+import {routerRedux, Link} from 'dva/router'
 import {
   List,
   Card,
@@ -27,9 +27,10 @@ const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;
 const { Search } = Input;
 
-@connect(({ list, loading }) => ({
+@connect(({ list, loading, common }) => ({
   list,
   loading: loading.models.list,
+  common,
 }))
 export default class BasicList extends PureComponent {
   state = {
@@ -40,7 +41,7 @@ export default class BasicList extends PureComponent {
     const res = await queryLogList()
     if (res) {
       this.setState({
-        list: res,
+        list: res.data.list,
       })
     }
   }
@@ -55,6 +56,7 @@ export default class BasicList extends PureComponent {
 
   render() {
     const {list} = this.state
+    const {common: {logTypes}} = this.props
 
     const extraContent = (
       <div className={styles.extraContent}>
@@ -67,34 +69,40 @@ export default class BasicList extends PureComponent {
       </div>
     );
 
-    const ListContent = ({ data: { creator, createAt, type, status } }) => (
-      <div className={styles.listContent}>
-        <div className={styles.listContentItem}>
-          <span>当前状态</span>
-          <p>
-            {
-              status === 0 ? (
-                <Badge status="success" text="未使用" />
-              ) : (
-                <Badge status="processing" text="使用中" />
-              )
-            }
-          </p>
+
+    const ListContent = ({ data: { creator, createAt, type, status, subType } }) => {
+
+      const typeTop = logTypes.find(t => t.id === type)
+
+      return (
+        <div className={styles.listContent}>
+          <div className={styles.listContentItem}>
+            <span>当前状态</span>
+            <p>
+              {
+                status === 0 ? (
+                  <Badge status="success" text="未使用" />
+                ) : (
+                  <Badge status="processing" text="使用中" />
+                )
+              }
+            </p>
+          </div>
+          <div className={styles.listContentItem}>
+            <span>创建人</span>
+            <p>{creator}</p>
+          </div>
+          <div className={styles.listContentItem}>
+            <span>类型</span>
+            <p>{typeTop.name} / {typeTop.logSubTypeList.find(t => t.id === subType).name}</p>
+          </div>
+          <div className={styles.listContentItem}>
+            <span>创建时间</span>
+            <p>{moment(createAt).format('YYYY-MM-DD HH:mm')}</p>
+          </div>
         </div>
-        <div className={styles.listContentItem}>
-          <span>创建人</span>
-          <p>{creator}</p>
-        </div>
-        <div className={styles.listContentItem}>
-          <span>类型</span>
-          <p>{type}</p>
-        </div>
-        <div className={styles.listContentItem}>
-          <span>创建时间</span>
-          <p>{moment(createAt).format('YYYY-MM-DD HH:mm')}</p>
-        </div>
-      </div>
-    );
+      )
+    }
 
     const menu = (
       <Menu>
@@ -134,7 +142,7 @@ export default class BasicList extends PureComponent {
               rowKey="id"
               dataSource={list}
               renderItem={item => (
-                <List.Item actions={[<a>编辑</a>, <MoreBtn />]}>
+                <List.Item actions={[<a onClick={() => this.handleEdit(item.id)} >编辑</a>, <MoreBtn />]}>
                   <List.Item.Meta
                     avatar={<p>23</p>}
                     title={item.name}
