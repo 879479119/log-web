@@ -4,9 +4,7 @@ import { Row, Col, Icon, Card, Tabs, Table, Radio, List, DatePicker, Menu, Dropd
 import numeral from 'numeral';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
-import { yuan, Bar, Pie } from 'components/Charts';
-import Trend from 'components/Trend';
-import NumberInfo from 'components/NumberInfo';
+import { yuan, Bar, Pie, TimelineChart } from 'components/Charts';
 import { getTimeDistance } from '../../utils/utils';
 
 import styles from './Analysis.less';
@@ -56,7 +54,8 @@ export default class Analysis extends Component {
 
   componentDidMount() {
     this.props.dispatch({
-      type: 'chart/fetch',
+      type: 'chart/fetchAB',
+      payload: {id: 5},
     });
   }
 
@@ -67,99 +66,61 @@ export default class Analysis extends Component {
     });
   }
 
-  handleChangeSalesType = e => {
-    this.setState({
-      salesType: e.target.value,
-    });
-  };
+  transform = (source) => {
 
-  handleTabChange = key => {
-    this.setState({
-      currentTabKey: key,
-    });
-  };
+    let stay = []
+    let k = 1;
 
-  handleRangePickerChange = rangePickerValue => {
-    this.setState({
-      rangePickerValue,
-    });
-
-    this.props.dispatch({
-      type: 'chart/fetchSalesData',
-    });
-  };
-
-  selectDate = type => {
-    this.setState({
-      rangePickerValue: getTimeDistance(type),
-    });
-
-    this.props.dispatch({
-      type: 'chart/fetchSalesData',
-    });
-  };
-
-  isActive(type) {
-    const { rangePickerValue } = this.state;
-    const value = getTimeDistance(type);
-    if (!rangePickerValue[0] || !rangePickerValue[1]) {
-      return;
+    for(const group in source.groups) {
+      if (source.groups.hasOwnProperty(group)) {
+        const arr = source.groups[group]
+        const ret = new Array(30).fill(0).map((_, i) => ({
+          count: 0,
+          count1: 0,
+          day: i,
+          hour: 0,
+        }))
+        for (let i = 0; i < 30; i++) {
+          if (!arr[i]) {
+          } else {
+            ret[arr[i].day] = (arr[i])
+          }
+        }
+        if (k === 1) {
+          stay = ret.map(t => ({
+            x: t.day,
+            [`y${k}`]: t.count1 || t.count,
+          }))
+        } else {
+          ret.forEach((t, i) => {
+            stay[i][`y${k}`] = t.count1 || t.count
+          })
+        }
+        k ++
+      }
     }
-    if (
-      rangePickerValue[0].isSame(value[0], 'day') &&
-      rangePickerValue[1].isSame(value[1], 'day')
-    ) {
-      return styles.currentDate;
-    }
+
+    return stay
   }
 
   render() {
-    const { rangePickerValue, salesType, currentTabKey } = this.state;
     const { chart, loading } = this.props;
-    const { salesData, salesTypeData, salesTypeDataOnline, salesTypeDataOffline } = chart;
+    const { abClickRatio, abPvCount, abStayTime, ab } = chart;
 
-    const salesPieData =
-      salesType === 'all'
-        ? salesTypeData
-        : salesType === 'online' ? salesTypeDataOnline : salesTypeDataOffline;
+    if (ab) {
+      return null
+    }
 
-    const menu = (
-      <Menu>
-        <Menu.Item>操作一</Menu.Item>
-        <Menu.Item>操作二</Menu.Item>
-      </Menu>
-    );
-
-    const salesExtra = (
-      <div className={styles.salesExtraWrap}>
-        <div className={styles.salesExtra}>
-          <a className={this.isActive('today')} onClick={() => this.selectDate('today')}>
-            今日
-          </a>
-          <a className={this.isActive('week')} onClick={() => this.selectDate('week')}>
-            本周
-          </a>
-          <a className={this.isActive('month')} onClick={() => this.selectDate('month')}>
-            本月
-          </a>
-          <a className={this.isActive('year')} onClick={() => this.selectDate('year')}>
-            全年
-          </a>
-        </div>
-        <RangePicker
-          value={rangePickerValue}
-          onChange={this.handleRangePickerChange}
-          style={{ width: 256 }}
-        />
-      </div>
-    );
+    const stay = this.transform(abStayTime)
+    const click = this.transform(abClickRatio)
+    const pv = this.transform(abPvCount)
 
     return (
       <PageHeaderLayout
         title="AB测试：A和B的结果对比"
         content={
           <List
-            size={'small'}
+            size="small"
             grid={{ gutter: 10, column: 4 }}
             dataSource={teams}
             renderItem={item => (
@@ -183,12 +144,16 @@ export default class Analysis extends Component {
         <Fragment>
           <Card loading={loading} bordered={false} bodyStyle={{ padding: 0 }}>
             <div className={styles.salesCard}>
-              <Tabs tabBarExtraContent={salesExtra} size="large" tabBarStyle={{ marginBottom: 24 }}>
-                <TabPane tab="销售额" key="sales">
-                  <Row>
-                    <Col xl={24} lg={12} md={12} sm={24} xs={24}>
-                      <div className={styles.salesBar}>
-                        <Bar height={295} title="销售额趋势" data={salesData} />
+              <Tabs size="large" tabBarStyle={{ marginBottom: 24 }}>
+                <TabPane tab="用户停留时长对比">
+                  <Row gutter={24}>
+                    <Col xl={24} lg={24} md={24} sm={24} xs={24}>
+                      <div style={{padding: 20}}>
+                        <TimelineChart
+                          height={250}
+                          data={stay}
+                          titleMap={{ y1: '对照组1', y2: '对照组2' }}
+                        />
                       </div>
                     </Col>
                   </Row>
@@ -196,63 +161,37 @@ export default class Analysis extends Component {
               </Tabs>
             </div>
           </Card>
-
           <Row gutter={24}>
             <Col xl={12} lg={24} md={24} sm={24} xs={24}>
-              <Card
-                loading={loading}
-                className={styles.salesCard}
-                bordered={false}
-                title="销售额类别占比"
-                bodyStyle={{ padding: 24 }}
-                style={{ marginTop: 24, minHeight: 509 }}
-              >
-                <h4 style={{ marginTop: 8, marginBottom: 32 }}>销售额</h4>
-                <Pie
-                  hasLegend
-                  subTitle="销售额"
-                  total={() => (
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: yuan(salesPieData.reduce((pre, now) => now.y + pre, 0)),
-                      }}
+
+              <Card title="用户PV数对比" loading={loading} bordered={false} bodyStyle={{ padding: 0 }} style={{marginTop: 20}}>
+                <div className={styles.salesCard}>
+                  <div style={{padding: 20}}>
+                    <TimelineChart
+                      height={250}
+                      data={pv}
+                      titleMap={{ y1: '对照组1', y2: '对照组2' }}
                     />
-                  )}
-                  data={salesPieData}
-                  valueFormat={val => <span dangerouslySetInnerHTML={{ __html: yuan(val) }} />}
-                  height={248}
-                  lineWidth={4}
-                />
+                  </div>
+                </div>
               </Card>
             </Col>
             <Col xl={12} lg={24} md={24} sm={24} xs={24}>
-              <Card
-                loading={loading}
-                className={styles.salesCard}
-                bordered={false}
-                title="销售额类别占比"
-                bodyStyle={{ padding: 24 }}
-                style={{ marginTop: 24, minHeight: 509 }}
-              >
-                <h4 style={{ marginTop: 8, marginBottom: 32 }}>销售额</h4>
-                <Pie
-                  hasLegend
-                  subTitle="销售额"
-                  total={() => (
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: yuan(salesPieData.reduce((pre, now) => now.y + pre, 0)),
-                      }}
+
+              <Card title="用户点击量对比" loading={loading} bordered={false} bodyStyle={{ padding: 0 }} style={{marginTop: 20}}>
+                <div className={styles.salesCard}>
+                  <div style={{padding: 20}}>
+                    <TimelineChart
+                      height={250}
+                      data={click}
+                      titleMap={{ y1: '对照组1', y2: '对照组2' }}
                     />
-                  )}
-                  data={salesPieData.slice(3)}
-                  valueFormat={val => <span dangerouslySetInnerHTML={{ __html: yuan(val) }} />}
-                  height={248}
-                  lineWidth={4}
-                />
+                  </div>
+                </div>
               </Card>
             </Col>
           </Row>
+
         </Fragment>
       </PageHeaderLayout>
     );
