@@ -20,6 +20,7 @@ export default {
       // Login successfully
       if (response.status === 'ok') {
         reloadAuthorized();
+        console.info(23333)
         yield put(routerRedux.push('/'));
       }
     },

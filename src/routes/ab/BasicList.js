@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import moment from 'moment';
 import { connect } from 'dva';
-import { routerRedux } from 'dva/router';
+import { routerRedux, Link } from 'dva/router';
 import {
   List,
   Card,
@@ -48,6 +48,10 @@ export default class BasicList extends PureComponent {
   handleEdit = id => {
     this.props.dispatch(routerRedux.push(`/ab/edit/${id}`));
   };
+
+  deleteAB = id => {
+    alert(id);
+  }
 
   render() {
     const { list } = this.state;
@@ -99,19 +103,17 @@ export default class BasicList extends PureComponent {
       </div>
     );
 
-    const menu = (
-      <Menu>
-        <Menu.Item>
-          <a>编辑</a>
-        </Menu.Item>
-        <Menu.Item>
-          <a>删除</a>
-        </Menu.Item>
-      </Menu>
-    );
-
-    const MoreBtn = () => (
-      <Dropdown overlay={menu}>
+    const MoreBtn = ({id}) => (
+      <Dropdown overlay={
+        <Menu>
+          <Menu.Item>
+            <Link to={`/analysis/ab/${id}`}>查看分析</Link>
+          </Menu.Item>
+          <Menu.Item>
+            <a onClick={() => this.deleteAB(id)}>删除</a>
+          </Menu.Item>
+        </Menu>}
+      >
         <a>
           更多 <Icon type="down" />
         </a>
@@ -142,7 +144,7 @@ export default class BasicList extends PureComponent {
               rowKey="id"
               dataSource={list}
               renderItem={item => (
-                <List.Item actions={[<a onClick={() => this.handleEdit(item.id)}>编辑</a>, <MoreBtn />]}>
+                <List.Item actions={[<a onClick={() => this.handleEdit(item.id)}>编辑</a>, <MoreBtn id={item.id} />]}>
                   <List.Item.Meta
                     title={
                       <div>

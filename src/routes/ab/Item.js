@@ -36,6 +36,7 @@ export default class Item extends PureComponent {
   render() {
     const {data} = this.state
     const { getFieldDecorator, getFieldValue } = this.props.form;
+    const {index} = this.props
 
     const formItemLayout = {
       labelCol: {
@@ -53,7 +54,7 @@ export default class Item extends PureComponent {
     };
     return (
       <div>
-        <Card style={{width: '45%', display: 'inline-block', margin: 20}} title="编辑参数" extra={<Button type="danger" ghost size="small" onClick={() => this.handleRemove(index)}>删除</Button>}>
+        <Card style={{width: '45%', display: 'inline-block', margin: 20}} title="编辑参数" extra={<Button type="danger" ghost size="small" onClick={() => this.props.onRemove(index)}>删除</Button>}>
           <Form onSubmit={this.handleSubmit} hideRequiredMark style={{ marginTop: 8 }}>
             <FormItem {...formItemLayout} label="对照组名称">
               {getFieldDecorator('name', {
@@ -91,8 +92,8 @@ export default class Item extends PureComponent {
             <FormItem label="详细配置情况">
               <div>
                 {getFieldDecorator('config', {
-                  initialValue: '{}',
-                })(<Ace />)}
+                  initialValue: data.config,
+                })(<Input.TextArea placeholder="输入feature" />)}
               </div>
             </FormItem>
           </Form>

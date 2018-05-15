@@ -1,16 +1,14 @@
 import React, { Component, Fragment } from 'react';
 import { connect } from 'dva';
-import { Row, Col, Icon, Card, Tabs, Table, Radio, List, DatePicker, Menu, Dropdown } from 'antd';
-import numeral from 'numeral';
+import { Row, Col, Card, Tabs, List } from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 
-import { yuan, Bar, Pie, TimelineChart } from 'components/Charts';
-import { getTimeDistance } from '../../utils/utils';
+import { TimelineChart } from 'components/Charts';
 
 import styles from './Analysis.less';
+import { queryAB } from '../../services/ab';
 
 const { TabPane } = Tabs;
-const { RangePicker } = DatePicker;
 
 const rankingListData = [];
 for (let i = 0; i < 7; i += 1) {
@@ -47,16 +45,23 @@ const teams = [
 }))
 export default class Analysis extends Component {
   state = {
-    salesType: 'all',
-    currentTabKey: '',
-    rangePickerValue: getTimeDistance('year'),
+    detail: {},
   };
 
-  componentDidMount() {
-    this.props.dispatch({
-      type: 'chart/fetchAB',
-      payload: {id: 5},
-    });
+  async componentDidMount() {
+    const {id} = this.props.match.params
+
+    if (id !== undefined) {
+      const res = await queryAB(id)
+      this.setState({detail: res.data.detail})
+      this.props.dispatch({
+        type: 'chart/fetchAB',
+        payload: {id},
+      });
+    } else {
+      this.setState({detail: {}})
+    }
+
   }
 
   componentWillUnmount() {
@@ -104,8 +109,19 @@ export default class Analysis extends Component {
   }
 
   render() {
-    const { chart, loading } = this.props;
+    const { chart, loading, match } = this.props;
+    const {detail} = this.state
     const { abClickRatio, abPvCount, abStayTime, ab } = chart;
+
+    console.info(detail)
+
+    if (+match.params.id === 0) {
+      return (
+        <div>
+          <h4>请选择对比组</h4>
+        </div>
+      )
+    }
 
     if (ab) {
       return null
@@ -117,12 +133,12 @@ export default class Analysis extends Component {
 
     return (
       <PageHeaderLayout
-        title="AB测试：A和B的结果对比"
+        title={`AB测试：${detail.name} 的测试结果`}
         content={
           <List
             size="small"
             grid={{ gutter: 10, column: 4 }}
-            dataSource={teams}
+            dataSource={detail.params || []}
             renderItem={item => (
               <List.Item>
                 <Card>
@@ -135,9 +151,9 @@ export default class Analysis extends Component {
         }
         extraContent={
           <div>
-            <p>开始时间： 2018-02-12 12:21:12</p>
-            <p>结束时间： 2018-02-12 12:21:12</p>
-            <p>创建时间： 2018-02-12 12:21:12</p>
+            <p>开始时间： {detail.startTime}</p>
+            <p>结束时间： {detail.endTime}</p>
+            <p>创建时间： {detail.createTime}</p>
           </div>
         }
       >

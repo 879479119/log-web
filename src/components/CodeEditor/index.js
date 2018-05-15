@@ -19,7 +19,7 @@ export default function() {
         name="UNIQUE_ID_OF_DIV"
         editorProps={{$blockScrolling: true}}
         width="auto"
-        height={300}
+        height={'300px'}
       />
     </div>
 

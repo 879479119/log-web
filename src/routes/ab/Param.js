@@ -16,9 +16,7 @@ import styles from './style.less';
 import Ace from '../../components/CodeEditor';
 import Item from './Item'
 
-const FormItem = Form.Item;
-
-export default class BasicForms extends PureComponent {
+export default class Param extends PureComponent {
   handleSubmit = e => {
     e.preventDefault();
     this.props.form.validateFieldsAndScroll((err, values) => {
@@ -69,7 +67,7 @@ export default class BasicForms extends PureComponent {
     const Tables = this.state.data.map((param, index) => {
 
       return (
-        <Item key={index} value={param} ref={t => this.list[index] = t} />
+        <Item key={index} index={index} value={param} onRemove={this.handleRemove} ref={t => this.list[index] = t} />
       )
     })
 

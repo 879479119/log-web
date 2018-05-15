@@ -23,7 +23,7 @@ const menuData = [
       },
       {
         name: 'AB分析',
-        path: 'ab',
+        path: 'ab/0',
       },
     ],
   },

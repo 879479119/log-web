@@ -8,25 +8,23 @@ import {
   Button,
   Card,
   InputNumber,
-  Icon,
 } from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import FooterToolbar from '../../components/FooterToolbar';
 import Param from './Param'
 import styles from './style.less';
-import { platforms, versions } from '../../utils/const';
 import { createAB, editAB, queryAB } from '../../services/ab';
 import { routerRedux } from 'dva/router';
 import moment from 'moment'
-import { queryLog } from '../../services/log';
 
 const FormItem = Form.Item;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
-@connect(({ loading }) => ({
+@connect(({ loading, common }) => ({
   submitting: loading.effects['form/submitRegularForm'],
+  common,
 }))
 @Form.create()
 export default class BasicForms extends PureComponent {
@@ -74,7 +72,7 @@ export default class BasicForms extends PureComponent {
   }
 
   render() {
-    const { submitting } = this.props;
+    const { submitting, common } = this.props;
     const { getFieldDecorator, getFieldValue } = this.props.form;
     const {detail} = this.state
 
@@ -109,31 +107,27 @@ export default class BasicForms extends PureComponent {
                 initialValue: detail.name,
               })(<Input placeholder="给这次测试起个名字" />)}
             </FormItem>
-            <Form.Item {...formItemLayout} label={'平台'}>
+            <Form.Item {...formItemLayout} label="平台">
               {getFieldDecorator('platformId', {
                 rules: [{ required: true, message: '请选择' }],
                 initialValue: detail.platformId,
               })(
                 <Select placeholder="请选择平台">
-                  {platforms.map(t => (
-                    <Option key={t.code} value={t.code}>
-                      {t.name}
-                    </Option>
-                  ))}
+                  {
+                    (common.appPlatforms || []).map(t => <Option key={t.id} value={t.id} >{t.name}</Option>)
+                  }
                 </Select>
               )}
             </Form.Item>
-            <Form.Item {...formItemLayout} label={'版本'}>
+            <Form.Item {...formItemLayout} label="版本" style={{display: getFieldValue('platformId') !== undefined ? 'block' : 'none'}}>
               {getFieldDecorator('versionId', {
                 rules: [{ required: true, message: '请选择' }],
                 initialValue: detail.versionId,
               })(
                 <Select placeholder="请选择版本">
-                  {versions.map(t => (
-                    <Option key={t.code} value={t.code}>
-                      {t.name}
-                    </Option>
-                  ))}
+                  {
+                    (common.appVersions || []).filter(t => t.platformId === +getFieldValue('platformId')).map(t => <Option key={t.id} value={t.id} >{t.name}</Option>)
+                  }
                 </Select>
               )}
             </Form.Item>
@@ -193,7 +187,7 @@ export default class BasicForms extends PureComponent {
           )}
         </Card>
         <FooterToolbar>
-          <Button type="primary" onClick={this.handleSubmit} loading={submitting}>
+          <Button type="primary" onClick={this.handleSubmit} >
             提交
           </Button>
         </FooterToolbar>

@@ -6,28 +6,18 @@ import {
   Icon,
   Card,
   Tabs,
-  Table,
-  Radio,
   DatePicker,
   Tooltip,
-  Menu,
-  Dropdown,
 } from 'antd';
 import numeral from 'numeral';
 import {
   ChartCard,
   yuan,
-  MiniArea,
-  MiniBar,
-  MiniProgress,
-  Field,
   Bar,
   Pie,
-  TimelineChart,
 } from 'components/Charts';
-import Trend from 'components/Trend';
-import NumberInfo from 'components/NumberInfo';
 import { getTimeDistance } from '../../utils/utils';
+import moment from 'moment';
 
 import styles from './Analysis.less';
 
@@ -106,20 +96,12 @@ export default class Analysis extends Component {
   }
 
   render() {
-    const { rangePickerValue, salesType } = this.state;
-    const { chart } = this.props;
-    const { addCount, activeCount, count, enterCount, lineActiveDay, pvCount, viewTime, loading } = this.props.chart
+    const { rangePickerValue } = this.state;
+    const { addCount, activeCount, count, enterCount, lineActiveDay, pvCount, viewTime, loading } = this.props.chart;
 
     if (loading) {
       return null;
     }
-
-    const line = lineActiveDay.count.map(t => {
-      return {
-        x: t.day,
-        y: t.count,
-      }
-    })
 
     const salesExtra = (
       <div className={styles.salesExtraWrap}>
@@ -205,7 +187,7 @@ export default class Analysis extends Component {
                 <Row>
                   <Col xl={16} lg={12} md={12} sm={24} xs={24}>
                     <div className={styles.salesBar}>
-                      <Bar height={295} title="访问趋势变化" data={line} />
+                      <Bar height={295} title="访问趋势变化" data={fill(lineActiveDay.count)} />
                     </div>
                   </Col>
                   <Col xl={8} lg={12} md={12} sm={24} xs={24}>
@@ -238,12 +220,7 @@ export default class Analysis extends Component {
                       <Bar
                         height={295}
                         title="PV数趋势变化"
-                        data={pvCount.count.map(t => {
-                        return {
-                          x: t.day,
-                          y: t.count,
-                        }
-                      })}
+                        data={fill(pvCount.count)}
                       />
                     </div>
                   </Col>
@@ -252,12 +229,7 @@ export default class Analysis extends Component {
                       <Bar
                         height={295}
                         title="每日浏览时长变化"
-                        data={viewTime.count.map(t => {
-                        return {
-                          x: t.day,
-                          y: t.count,
-                        }
-                      })}
+                        data={fill(viewTime.count)}
                       />
                     </div>
                   </Col>
@@ -298,4 +270,16 @@ export default class Analysis extends Component {
       </Fragment>
     );
   }
+}
+
+function fill(arr) {
+  const ret = new Array(30).fill(0).map((_,i) => ({x: i, y: 0}))
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i].day >= 30) continue;
+    ret[arr[i].day] = {
+      x: arr[i].day,
+      y: arr[i].count || arr[i].count1,
+    }
+  }
+  return ret
 }
