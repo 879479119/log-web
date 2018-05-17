@@ -8,6 +8,7 @@ import {
   Row,
   DatePicker,
   TimePicker,
+  Switch,
   Input,
   Select,
   Popover,
@@ -80,6 +81,8 @@ class AdvancedForm extends PureComponent {
 
 
         const {id} = this.props.match.params
+
+        values.status = + values.status;
 
         if (id === undefined) {
           // submit the values
@@ -209,6 +212,16 @@ class AdvancedForm extends PureComponent {
                         (types.find(t => t.id === +getFieldValue('type')) || {logSubTypeList: []}).logSubTypeList.map(t => <Option key={t.id} value={t.id} >{t.name}</Option>)
                       }
                     </Select>
+                  )}
+                </Form.Item>
+              </Col>
+              <Col xl={{ span: 6, offset: 2 }} lg={{ span: 8 }} md={{ span: 12 }} sm={24} >
+                <Form.Item label={'是否启用'}>
+                  {getFieldDecorator('status', {
+                    initialValue: !!detail.status,
+                    valuePropName: 'checked',
+                  })(
+                    <Switch checkedChildren="开" unCheckedChildren="关" />
                   )}
                 </Form.Item>
               </Col>

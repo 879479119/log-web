@@ -13,6 +13,7 @@ export default {
   effects: {
     *login({ payload }, { call, put }) {
       const response = yield call(accountLogin, payload);
+      console.info(response)
       yield put({
         type: 'changeLoginStatus',
         payload: response,
@@ -20,9 +21,20 @@ export default {
       // Login successfully
       if (response.status === 'ok') {
         reloadAuthorized();
-        console.info(23333)
         yield put(routerRedux.push('/'));
       }
+      if (response.status === 'error') {
+        yield put({
+          type: 'changeLoginStatus',
+          payload: {
+            status: 'error',
+            currentAuthority: 'guest',
+            type: 'account',
+          },
+        });
+      }
+
+
     },
     *logout(_, { put, select }) {
       try {

@@ -51,10 +51,10 @@ class UserLayout extends React.PureComponent {
               <div className={styles.header}>
                 <Link to="/">
                   <img alt="logo" className={styles.logo} src={logo} />
-                  <span className={styles.title}>Ant Design</span>
+                  <span className={styles.title}>Gitto Management System</span>
                 </Link>
               </div>
-              <div className={styles.desc}>Ant Design 是西湖区最具影响力的 Web 设计规范</div>
+              <div className={styles.desc}>埋点管理-数据分析-AB测试</div>
             </div>
             <Switch>
               {getRoutes(match.path, routerData).map(item => (
@@ -68,7 +68,6 @@ class UserLayout extends React.PureComponent {
               <Redirect exact from="/user" to="/user/login" />
             </Switch>
           </div>
-          <GlobalFooter links={links} copyright={copyright} />
         </div>
       </DocumentTitle>
     );

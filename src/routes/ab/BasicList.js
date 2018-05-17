@@ -15,7 +15,7 @@ import {
 } from 'antd';
 
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
-import { queryABList } from '../../services/ab';
+import { queryABList, deleteAB } from '../../services/ab';
 
 import styles from './BasicList.less';
 
@@ -49,8 +49,9 @@ export default class BasicList extends PureComponent {
     this.props.dispatch(routerRedux.push(`/ab/edit/${id}`));
   };
 
-  deleteAB = id => {
-    alert(id);
+  deleteAB = async id => {
+    await deleteAB(id);
+    location.reload(true);
   }
 
   render() {
@@ -80,10 +81,6 @@ export default class BasicList extends PureComponent {
                 <Badge status="processing" text="使用中" />
               )}
             </p>
-          </div>
-          <div className={styles.listContentItem}>
-            <span>创建人</span>
-            <p>{creator}</p>
           </div>
           <div className={styles.listContentItem}>
             <span>创建时间</span>
@@ -129,7 +126,6 @@ export default class BasicList extends PureComponent {
             title="AB实验列表"
             style={{ marginTop: 24 }}
             bodyStyle={{ padding: '0 32px 40px 32px' }}
-            extra={extraContent}
           >
             <Button
               type="dashed"
@@ -161,7 +157,7 @@ export default class BasicList extends PureComponent {
                             marginRight: 10,
                           }}
                         >
-                          W
+                          {item.name[0].toUpperCase()}
                         </span>
                         <span>{item.name}</span>
                       </div>

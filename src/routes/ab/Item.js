@@ -53,11 +53,10 @@ export default class Item extends PureComponent {
       },
     };
     return (
-      <div>
-        <Card style={{width: '45%', display: 'inline-block', margin: 20}} title="编辑参数" extra={<Button type="danger" ghost size="small" onClick={() => this.props.onRemove(index)}>删除</Button>}>
-          <Form onSubmit={this.handleSubmit} hideRequiredMark style={{ marginTop: 8 }}>
-            <FormItem {...formItemLayout} label="对照组名称">
-              {getFieldDecorator('name', {
+      <Card style={{width: '43%', display: 'inline-block', margin: 20}} title="编辑参数" extra={<Button type="danger" ghost size="small" onClick={() => this.props.onRemove(index)}>删除</Button>}>
+        <Form onSubmit={this.handleSubmit} hideRequiredMark style={{ marginTop: 8 }}>
+          <FormItem {...formItemLayout} label="对照组名称">
+            {getFieldDecorator('name', {
                 rules: [
                   {
                     required: true,
@@ -66,9 +65,9 @@ export default class Item extends PureComponent {
                 ],
                 initialValue: data.name,
               })(<Input placeholder="输入名称" />)}
-            </FormItem>
-            <FormItem {...formItemLayout} label="对照组描述">
-              {getFieldDecorator('description', {
+          </FormItem>
+          <FormItem {...formItemLayout} label="对照组描述">
+            {getFieldDecorator('description', {
                 rules: [
                   {
                     required: true,
@@ -77,9 +76,9 @@ export default class Item extends PureComponent {
                 ],
                 initialValue: data.description,
               })(<Input placeholder="输入描述" />)}
-            </FormItem>
-            <FormItem {...formItemLayout} label="feature">
-              {getFieldDecorator('feature', {
+          </FormItem>
+          <FormItem {...formItemLayout} label="feature">
+            {getFieldDecorator('feature', {
                 rules: [
                   {
                     required: true,
@@ -88,17 +87,16 @@ export default class Item extends PureComponent {
                 ],
                 initialValue: data.feature,
               })(<Input placeholder="输入feature" />)}
-            </FormItem>
-            <FormItem label="详细配置情况">
-              <div>
-                {getFieldDecorator('config', {
+          </FormItem>
+          <FormItem label="详细配置情况">
+            <div>
+              {getFieldDecorator('config', {
                   initialValue: data.config,
                 })(<Input.TextArea placeholder="输入feature" />)}
-              </div>
-            </FormItem>
-          </Form>
-        </Card>
-      </div>
+            </div>
+          </FormItem>
+        </Form>
+      </Card>
     )
   }
 }

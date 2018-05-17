@@ -9,6 +9,13 @@ export async function queryAB(id) {
   return request(`/api/ab/${id}`);
 }
 
+
+export async function deleteAB(id) {
+  return request(`/api/ab/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 export async function createAB(body) {
   return request('/api/ab/add', {
     method: 'POST',

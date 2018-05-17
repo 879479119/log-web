@@ -44,7 +44,8 @@ export default class TableForm extends PureComponent {
   newMember = () => {
     const newData = this.state.data.map(item => ({ ...item }));
     newData.push({
-      key: '',
+      key: `NEW_TEMP_ID_${this.index}`,
+      expression: '',
       name: '',
       description: '',
       editable: true,
@@ -109,27 +110,7 @@ export default class TableForm extends PureComponent {
   render() {
     const columns = [
       {
-        title: '字段提取方式',
-        dataIndex: 'expression',
-        key: 'expression',
-        width: '20%',
-        render: (text, record) => {
-          if (record.editable) {
-            return (
-              <Input
-                value={text}
-                autoFocus
-                onChange={e => this.handleFieldChange(e, 'expression', record.key)}
-                onKeyPress={e => this.handleKeyPress(e, record.key)}
-                placeholder="收集方式"
-              />
-            );
-          }
-          return text;
-        },
-      },
-      {
-        title: '收集名称',
+        title: '字段名',
         dataIndex: 'name',
         key: 'name',
         width: '20%',
@@ -138,9 +119,10 @@ export default class TableForm extends PureComponent {
             return (
               <Input
                 value={text}
+                autoFocus
                 onChange={e => this.handleFieldChange(e, 'name', record.key)}
                 onKeyPress={e => this.handleKeyPress(e, record.key)}
-                placeholder="列名称"
+                placeholder="name"
               />
             );
           }
@@ -148,7 +130,26 @@ export default class TableForm extends PureComponent {
         },
       },
       {
-        title: '收集字段描述',
+        title: '表达式',
+        dataIndex: 'expression',
+        key: 'expression',
+        width: '20%',
+        render: (text, record) => {
+          if (record.editable) {
+            return (
+              <Input
+                value={text}
+                onChange={e => this.handleFieldChange(e, 'expression', record.key)}
+                onKeyPress={e => this.handleKeyPress(e, record.key)}
+                placeholder="expression"
+              />
+            );
+          }
+          return text;
+        },
+      },
+      {
+        title: '描述',
         dataIndex: 'description',
         key: 'description',
         width: '40%',
@@ -159,7 +160,7 @@ export default class TableForm extends PureComponent {
                 value={text}
                 onChange={e => this.handleFieldChange(e, 'description', record.key)}
                 onKeyPress={e => this.handleKeyPress(e, record.key)}
-                placeholder="说明"
+                placeholder="description"
               />
             );
           }

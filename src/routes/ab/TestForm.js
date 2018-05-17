@@ -8,6 +8,7 @@ import {
   Button,
   Card,
   InputNumber,
+  Switch,
 } from 'antd';
 import PageHeaderLayout from '../../layouts/PageHeaderLayout';
 import FooterToolbar from '../../components/FooterToolbar';
@@ -39,6 +40,8 @@ export default class BasicForms extends PureComponent {
         const {id} = this.props.match.params
 
         const params = this.l.getData()
+
+        values.status = + values.status;
 
         const postBody = {
           ...values,
@@ -72,6 +75,8 @@ export default class BasicForms extends PureComponent {
   }
 
   render() {
+
+    const {id} = this.props.match.params
     const { submitting, common } = this.props;
     const { getFieldDecorator, getFieldValue } = this.props.form;
     const {detail} = this.state
@@ -131,6 +136,14 @@ export default class BasicForms extends PureComponent {
                 </Select>
               )}
             </Form.Item>
+            <Form.Item  {...formItemLayout} label={'是否启用'}>
+              {getFieldDecorator('status', {
+                initialValue: !!detail.status,
+                valuePropName: 'checked',
+              })(
+                <Switch checkedChildren="开" unCheckedChildren="关" />
+              )}
+            </Form.Item>
             <FormItem {...formItemLayout} label="起止日期">
               {getFieldDecorator('date', {
                 rules: [
@@ -157,8 +170,8 @@ export default class BasicForms extends PureComponent {
             >
               {getFieldDecorator('percentage', {
                 initialValue: detail.percentage,
-              })(<InputNumber placeholder="请输入" min={0} max={10} />)}
-              <span> %</span><em className={styles.optional}>（最大10%）</em>
+              })(<InputNumber placeholder="请输入" min={0} max={100} />)}
+              <span> ‰</span><em className={styles.optional}>（最大100‰）</em>
             </FormItem>
             <FormItem {...formItemLayout} label="测试信息描述">
               {getFieldDecorator('description', {
